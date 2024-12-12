@@ -147,10 +147,10 @@ async function run() {
       const id = req.params.id;
       const updatedVisa = req.body;
       const filter = { _id: new ObjectId(id) };
-      const updateDoc = {
+      const updateVisa = {
         $set: updatedVisa,
       };
-      const result = await visaCollection.updateOne(filter, updateDoc);
+      const result = await visaCollection.updateOne(filter, updateVisa);
       res.send(result);
     });
     
