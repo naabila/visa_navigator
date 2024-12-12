@@ -6,9 +6,13 @@ import { useLoaderData } from 'react-router-dom';
 
 function MyVisas() {
   const updatedData=useLoaderData()
+  
   const { user,theme } = useContext(AuthContext); 
   const [myVisa, setMyVisa] = useState([]); 
+  const [selectedVisa, setSelectedVisa] = useState(null);
 
+
+//loading data according to email
   useEffect(() => {
     if (user?.email) {
      
@@ -26,7 +30,7 @@ function MyVisas() {
 
   //delete fuctionality
   const handleDel=(id)=>{
-    fetch(`https://server-jade-xi.vercel.app/added-visa/${id}`,{
+    fetch(`https://server-jade-xi.vercel.app/update-visa/${id}`,{
       method:"DELETE"
     })
     .then(res=>res.json())
@@ -43,18 +47,61 @@ function MyVisas() {
   
 
   // Update functionality
-  const handleUpdateVisa = (event) => {
-    event.preventDefault(); 
+  // load to be updated visa data
+const loadVisaDataForUpdate=(id)=>{
+  document.getElementById('update-visa').showModal();
+  fetch(`https://server-jade-xi.vercel.app/update-visa/${id}`)
+  .then(res=>res.json())
+  .then(data=>setSelectedVisa(data))
   
-    // Your update logic here
-    console.log("Visa updated");
-  
-    // Close the modal
-    const modal = document.getElementById("update-visa");
-    if (modal) {
-      modal.close(); 
+}
+//update visa
+  const handleUpdateVisa = (e) => {
+    e.preventDefault();
+  const form=e.target;
+  const image=form.image.value;
+  const name=form.name.value;
+  const visaType=form.visaType.value;
+  const fee=form.fee.value;
+  const validity=form.validity.value;
+  const method=form.method.value;
+  const updatedVisa={
+    image,
+    name,
+    visaType,
+    fee,
+    validity,
+    method}
+
+    console.log(updatedVisa)
+
+    // Send updated data to backend
+   fetch(`https://server-jade-xi.vercel.app/update-visa/${selectedVisa._id}`,{
+    method:'PUT',
+    headers:{
+      "content-type":"application/json"
+    },
+    body:JSON.stringify(updatedVisa)
+   })
+   .then(res=>res.json())
+   .then(data=>{
+    if(data.modifiedCount>0){
+      toast("Visa updated successfully");
+      const updatedVisas = myVisa.map((visa) =>
+        visa._id === selectedVisa._id ? { ...visa, ...updatedVisa } : visa
+      );
+
+      // Update the state with the modified array
+      setMyVisa(updatedVisas);
+      
     }
+   });
+
+
+   document.getElementById("update-visa").close()
   };
+  
+  
   return (
     <>
       <PageBanner title="My Visas" />
@@ -113,7 +160,7 @@ function MyVisas() {
                         Cancel
                       </button>
                       <button
-                        onClick={()=>document.getElementById('update-visa').showModal()}
+                       onClick={()=>loadVisaDataForUpdate(_id)}
                         className={`btn bg-komla ${
                           theme === "dark"
                             ? "text-[#fff] hover:bg-transparent hover:border-2 hover:border-[#fff]"
@@ -149,6 +196,7 @@ function MyVisas() {
           <input
             type="text"
             name='image'
+            defaultValue={selectedVisa?.image}
             placeholder="Paste the image link here"
             className="input input-bordered w-full"
           />
@@ -162,6 +210,7 @@ function MyVisas() {
           <input
             type="text"
             name='name'
+            defaultValue={selectedVisa?.name}
             placeholder="Enter the country name"
             className="input input-bordered w-full"
           />
@@ -172,13 +221,22 @@ function MyVisas() {
           <label className="label">
             <span className="label-text">Visa Type</span>
           </label>
-          <select className="select select-bordered w-full">
-            <option>Tourist Visa</option>
-            <option>Student Visa</option>
-            <option>Official Visa</option>
-            <option>Medical Visa</option>
-            <option>Working Visa</option>
-            <option>Business Visa</option>
+          <select className="select select-bordered w-full"
+          name='visaType'
+          value={selectedVisa?.visaType || ""} 
+          onChange={(e) =>
+          setSelectedVisa((prev) => ({
+          ...prev,
+            visaType: e.target.value,
+           }))
+           } 
+          >
+            <option value='Tourist Visa'>Tourist Visa</option>
+            <option value='Student Visa'>Student Visa</option>
+            <option value='Official Visa'>Official Visa</option>
+            <option value='Medical Visa'>Medical Visa</option>
+            <option value='Working Visa'>Working Visa</option>
+            <option value='Business Visa'>Business Visa</option>
           </select>
         </div>
 
@@ -190,6 +248,7 @@ function MyVisas() {
           <input
             type="text"
             name='time'
+            defaultValue={selectedVisa?.time}
             placeholder="e.g., 5-10 business days"
             className="input input-bordered w-full"
           />
@@ -205,6 +264,7 @@ function MyVisas() {
           <input
             type="number"
             name="age"
+            defaultValue={selectedVisa?.age}
             placeholder="Enter minimum age (if any)"
             className="input input-bordered w-full"
           />
@@ -218,6 +278,7 @@ function MyVisas() {
           <input
             type="number"
             name='fee'
+            defaultValue={selectedVisa?.fee}
             placeholder="Enter the visa fee"
             className="input input-bordered w-full"
           />
@@ -231,6 +292,7 @@ function MyVisas() {
           <input
             type="text"
             name="validity"
+            defaultValue={selectedVisa?.validity}
             placeholder="e.g., 6 months"
             className="input input-bordered w-full"
           />
@@ -244,13 +306,14 @@ function MyVisas() {
           <input
             type="text"
             name='method'
+            defaultValue={selectedVisa?.method}
             placeholder="e.g., Online or In-Person"
             className="input input-bordered w-full"
           />
         </div>
 
         {/* Add Visa Button */}
-        <button className={`btn bg-komla w-full mt-4 ${
+        <button  className={`btn bg-komla w-full mt-4 ${
     theme === "dark"
       ? "text-[#fff] hover:bg-transparent hover:border-2 hover:border-[#fff]"
       : "text-[#fff] hover:text-nil hover:bg-transparent hover:border-2 hover:border-nil"
