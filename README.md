@@ -5,7 +5,7 @@ Visa Navigator
 
 
 ## Live URL
-[https://visa-navigator-244e2.web.app/](#) 
+https://visa-navigator-244e2.web.app
 
 ## Key Features
 **Features of the Backend API:**
